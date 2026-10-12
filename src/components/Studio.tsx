@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { computeLayout, SQM_TO_SQFT } from "@/lib/layout";
 import { formatNumber, formatPrice, formatUSD } from "@/lib/format";
@@ -251,8 +252,7 @@ export function Studio() {
               return (
                 <li key={p.id} className="shrink-0">
                   <button type="button" onClick={() => setActive(p.id)} aria-pressed={on} className={`group flex w-56 items-center gap-3 rounded-2xl border p-2 pr-4 text-left transition duration-300 ${on ? "border-gold bg-gold/10" : "border-white/10 bg-white/[0.03] hover:border-white/30"}`}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={p.image} alt="" className="size-14 rounded-xl object-cover transition-transform duration-500 group-hover:scale-105" />
+                    <Image src={p.image} alt="" width={64} height={64} sizes="56px" className="size-14 rounded-xl object-cover transition-transform duration-500 group-hover:scale-105" />
                     <span className="min-w-0">
                       <span className="flex items-center gap-1.5 truncate text-sm font-medium">
                         {p.offMarket && <Icon name="lock" className="size-3 shrink-0 text-gold" />}

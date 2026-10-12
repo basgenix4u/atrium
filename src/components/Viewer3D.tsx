@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Layout } from "@/lib/layout";
 import type { Property } from "@/lib/types";
@@ -144,8 +145,7 @@ export default function Viewer3D({ property, onEnquire, registerApi }: { propert
           {failed && (
             <div className="absolute inset-0 z-20 grid place-items-center bg-ink-2 p-8 text-center">
               <div>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={property.image} alt={property.name} className="mx-auto mb-5 h-44 w-full max-w-md rounded-2xl object-cover opacity-80" />
+                <Image src={property.image} alt={property.name} width={1408} height={768} sizes="(max-width: 448px) 100vw, 448px" className="mx-auto mb-5 h-44 w-full max-w-md rounded-2xl object-cover opacity-80" />
                 <p className="font-display text-2xl">3D viewing needs WebGL.</p>
                 <p className="mt-2 text-sm text-ivory/60">Your browser or device has WebGL disabled. Enable hardware acceleration, or request a guided video tour from an advisor.</p>
                 <button className="btn btn-gold btn-sm mt-5" onClick={onEnquire}>

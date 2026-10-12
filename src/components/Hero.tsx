@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import Image from "next/image";
 import { formatPrice } from "@/lib/format";
 import { useAtrium } from "./AtriumProvider";
 import { Icon } from "./Icons";
@@ -21,8 +22,7 @@ export function Hero() {
   return (
     <section id="top" aria-labelledby="hero-title" className="grain relative isolate flex min-h-[100svh] items-center overflow-hidden bg-ink text-ivory">
       {/* poster image — visible until WebGL is ready, and as a graceful fallback */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={feat.image} alt="" aria-hidden="true" fetchPriority="high" className="absolute inset-0 z-0 size-full object-cover opacity-45" />
+      <Image src={feat.image} alt="" aria-hidden="true" priority fill sizes="100vw" className="absolute inset-0 z-0 size-full object-cover opacity-45" />
       <HeroScene model={feat.model} />
       <div aria-hidden className="absolute inset-0 z-[2] bg-gradient-to-r from-ink via-ink/55 to-transparent lg:via-ink/35" />
       <div aria-hidden className="absolute inset-0 z-[2] bg-gradient-to-t from-ink via-transparent to-ink/60" />

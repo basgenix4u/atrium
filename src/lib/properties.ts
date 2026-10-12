@@ -41,8 +41,19 @@ function fallback(): Property[] {
   return buildSeed().map((p, i) => ({ ...p, id: i + 1 }));
 }
 
-/** Loads every property (public and off-market). Seeds the table on first use. */
+/**
+ * Loads every property (public and off-market). Seeds the table on first use.
+ * Results are cached briefly at module level: without a database each request
+ * would otherwise pay a failed connection attempt, and the seed fallback is
+ * stable, so a short TTL keeps the landing fast and the server cool.
+ */
+let cache: { at: number; data: Property[] } | null = null;
+const CACHE_TTL_MS = 60_000;
+
 export async function loadAllProperties(): Promise<Property[]> {
+  const now = Date.now();
+  if (cache && now - cache.at < CACHE_TTL_MS) return cache.data;
+  let data: Property[];
   try {
     let rows = await db.select().from(properties).orderBy(asc(properties.sortOrder), asc(properties.id));
     if (rows.length === 0) {
@@ -50,10 +61,12 @@ export async function loadAllProperties(): Promise<Property[]> {
       await db.insert(properties).values(seed).onConflictDoNothing();
       rows = await db.select().from(properties).orderBy(asc(properties.sortOrder), asc(properties.id));
     }
-    return rows.map(fromRow);
+    data = rows.map(fromRow);
   } catch {
-    return fallback();
+    data = fallback();
   }
+  cache = { at: now, data };
+  return data;
 }
 
 export function splitProperties(all: Property[]) {

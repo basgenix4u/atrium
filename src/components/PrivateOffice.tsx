@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 import { formatNumber, formatPrice } from "@/lib/format";
 import { useAtrium } from "./AtriumProvider";
 import { Icon, type IconName } from "./Icons";
@@ -77,8 +79,7 @@ export function PrivateOffice() {
                   <Reveal as="li" key={p.id} delay={i * 100} className={i === 0 ? "sm:col-span-2" : ""}>
                     <button type="button" onClick={() => openStudio(p.id, "explore")} className="group relative block w-full overflow-hidden rounded-[1.75rem] text-left">
                       <div className={`relative overflow-hidden ${i === 0 ? "aspect-[16/8]" : "aspect-[4/3]"}`}>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={p.image} alt={`${p.name}, ${p.city}`} loading="lazy" className="size-full object-cover transition-transform duration-[1400ms] group-hover:scale-105" />
+                        <Image src={p.image} alt={`${p.name}, ${p.city}`} fill sizes="(max-width: 640px) 100vw, 50vw" className="object-cover transition-transform duration-[1400ms] group-hover:scale-105" />
                         <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-ink via-ink/30 to-transparent" />
                         <span className="absolute left-4 top-4 rounded-full bg-gold px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-wider text-ink">Off-market</span>
                         <div className="absolute inset-x-0 bottom-0 p-5">

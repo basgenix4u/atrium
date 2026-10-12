@@ -213,6 +213,15 @@ export class ViewerEngine {
   private last = 0;
   private clock = 0;
   private disposed = false;
+  /** Render-on-demand: set when anything visual changed since the last frame. */
+  private dirty = true;
+  /** Timestamp until which continuous animation keeps frames rendering. */
+  private animUntil = 0;
+
+  private markDirty(animMs = 0) {
+    this.dirty = true;
+    if (animMs > 0) this.animUntil = Math.max(this.animUntil, performance.now() + animMs);
+  }
   private io: IntersectionObserver | null = null;
   private ro: ResizeObserver | null = null;
 
@@ -274,8 +283,15 @@ export class ViewerEngine {
     this.opts = opts;
     this.container = container;
     const hero = !!opts.hero;
-    this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, hero ? 1.5 : 2));
+    // Device-aware quality: cap pixel ratio, disable MSAA and shrink shadow
+    // maps on touch/small devices — this is what keeps the viewer at 60fps on phones.
+    const coarse =
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(pointer: coarse)").matches;
+    const mobile = !!(coarse || window.innerWidth < 768);
+    const dprCap = hero ? (mobile ? 1.25 : 1.5) : mobile ? 1.5 : 2;
+    this.renderer = new THREE.WebGLRenderer({ antialias: !mobile, powerPreference: "high-performance" });
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, dprCap));
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFShadowMap;
@@ -298,6 +314,9 @@ export class ViewerEngine {
     this.controls.zoomSpeed = 0.9;
     this.controls.screenSpacePanning = true;
     this.controls.enabled = !hero;
+    this.controls.addEventListener("change", () => {
+      this.dirty = true;
+    });
     if (!hero) {
       container.tabIndex = 0;
       this.controls.listenToKeyEvents(container);
@@ -309,7 +328,8 @@ export class ViewerEngine {
     this.scene.add(this.hemi);
     this.sun = new THREE.DirectionalLight("#ffffff", 3);
     this.sun.castShadow = true;
-    this.sun.shadow.mapSize.set(hero ? 1536 : 2048, hero ? 1536 : 2048);
+    const sm = hero ? 1536 : mobile ? 1024 : 2048;
+    this.sun.shadow.mapSize.set(sm, sm);
     this.sun.shadow.bias = -0.0003;
     this.sun.shadow.normalBias = 0.06;
     this.scene.add(this.sun);
@@ -455,46 +475,56 @@ export class ViewerEngine {
     this.controls.update();
     this.stepTime(1, 0);
     this.syncLabels();
+    this.markDirty();
     this.emit();
   }
 
   setTime(t: TimeOfDay) {
     this.state.time = t;
+    this.markDirty(1800);
     this.emit();
   }
   setExplode(v: number) {
     this.explodeT = Math.max(0, Math.min(1, v));
     this.state.explode = this.explodeT;
+    this.markDirty(1200);
     this.emit();
   }
   setXray(b: boolean) {
     this.state.xray = b;
+    this.markDirty(1200);
     this.emit();
   }
   setRoofLifted(b: boolean) {
     this.state.roofLifted = b;
+    this.markDirty(1200);
     this.emit();
   }
   setFacadeOpen(b: boolean) {
     this.state.facadeOpen = b;
+    this.markDirty(1200);
     this.emit();
   }
   setIsolate(b: boolean) {
     this.state.isolate = b;
+    this.markDirty(900);
     this.emit();
   }
   toggleFloorHidden(i: number) {
     if (this.hidden.has(i)) this.hidden.delete(i);
     else this.hidden.add(i);
+    this.markDirty(900);
     this.emit();
   }
   highlightRoom(id: string | null) {
     this.sideHover = id;
+    this.markDirty(900);
   }
 
   setMoveInput(f: number, s: number) {
     this.walk.vf = f;
     this.walk.vs = s;
+    this.markDirty(400);
   }
 
   showExterior(aerial = false) {
@@ -633,6 +663,7 @@ export class ViewerEngine {
     this.controls.enabled = true;
     this.controls.update();
     this.syncLabels();
+    this.markDirty(1500);
     this.emit();
   }
 
@@ -668,6 +699,7 @@ export class ViewerEngine {
     this.state.objectId = id;
     this.highlight.visible = !!id;
     this.syncLabels();
+    this.markDirty(900);
     this.emit();
   }
 
@@ -769,6 +801,7 @@ export class ViewerEngine {
 
   private flyTo(pos: THREE.Vector3, tgt: THREE.Vector3, dur = 1.8, done?: () => void) {
     this.tween = { p0: this.camera.position.clone(), t0: this.controls.target.clone(), p1: pos.clone(), t1: tgt.clone(), e: 0, dur, done };
+    this.markDirty(dur * 1000 + 300);
     this.controls.enabled = false;
     this.state.flying = true;
     if (this.opts.hero) return;
@@ -812,6 +845,7 @@ export class ViewerEngine {
       else this.camera.clearViewOffset();
     }
     this.camera.updateProjectionMatrix();
+    this.markDirty();
   }
 
   // ------------------------------------------------------------------ building
@@ -1327,6 +1361,7 @@ export class ViewerEngine {
     const hit = this.raycast(e);
     this.renderer.domElement.style.cursor = hit ? "pointer" : this.state.mode === "walk" ? "grab" : "default";
     this.hoverRoom = hit && hit.type === "room" && this.state.mode !== "exterior" ? hit.id : null;
+    this.markDirty(900);
   };
 
   private onUp = (e: PointerEvent) => {
@@ -1354,7 +1389,10 @@ export class ViewerEngine {
         break;
       case "door": {
         const d = this.floors[hit.floor]?.doors[hit.idx];
-        if (d) d.manual = d.t < 0.5;
+        if (d) {
+          d.manual = d.t < 0.5;
+          this.markDirty(900);
+        }
         break;
       }
     }
@@ -1388,8 +1426,22 @@ export class ViewerEngine {
     const dt = Math.min(0.05, (now - this.last) / 1000);
     this.last = now;
     this.clock += dt;
+    // Render-on-demand: the hero always animates; everything else renders a
+    // frame only while a camera tween, walk-mode, object pulse or a marked
+    // transition is in flight — an idle viewer costs ~0 GPU/CPU.
+    const s = this.state;
+    const needsRender =
+      this.dirty ||
+      !!this.tween ||
+      s.mode === "walk" ||
+      (s.objectId !== null && !this.opts.hero) ||
+      now < this.animUntil ||
+      !!this.opts.hero;
+    if (!needsRender) return;
     this.update(dt);
+    this.updateLabels();
     this.renderer.render(this.scene, this.camera);
+    this.dirty = false;
   };
 
   private stepTime(k: number, dt: number) {
@@ -1567,7 +1619,7 @@ export class ViewerEngine {
     }
 
     if (this.tween || s.mode !== "exterior") this.followExplode(false);
-    this.updateLabels();
+
   }
 
   /** keeps the whole exploded stack framed by panning up and dollying back as floors separate */

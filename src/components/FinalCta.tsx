@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 import { AccessRequestForm } from "./Modals";
 import { Icon } from "./Icons";
 import { Reveal } from "./Reveal";
@@ -5,8 +7,7 @@ import { Reveal } from "./Reveal";
 export function FinalCta() {
   return (
     <section id="invitation" aria-labelledby="cta-title" className="grain relative isolate overflow-hidden bg-ink py-24 text-ivory sm:py-32">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/images/sunset.jpg" alt="" aria-hidden="true" loading="lazy" className="absolute inset-0 -z-20 size-full object-cover opacity-35" />
+      <Image src="/images/sunset.jpg" alt="" aria-hidden="true" fill sizes="100vw" className="absolute inset-0 -z-20 object-cover opacity-35" />
       <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-r from-ink via-ink/85 to-ink/40" />
       <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-t from-ink via-transparent to-ink" />
       <div className="mx-auto grid max-w-7xl items-center gap-14 px-5 sm:px-8 lg:grid-cols-2">

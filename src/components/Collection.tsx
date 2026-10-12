@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import Image from "next/image";
 import { useMemo, useState } from "react";
 import { formatNumber, formatPrice } from "@/lib/format";
 import type { Property } from "@/lib/types";
@@ -19,8 +20,7 @@ function Card({ p, i, saved, onSave, onOpen }: { p: Property; i: number; saved: 
   return (
     <article className="group animate-card-in relative isolate overflow-hidden rounded-[1.75rem] bg-ink text-ivory shadow-[0_24px_60px_-34px_rgba(0,0,0,0.6)]" style={{ animationDelay: `${Math.min(i, 8) * 70}ms` }}>
       <div className="relative aspect-[4/5] overflow-hidden">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={p.image} alt={`${p.name}, ${p.city} — ${p.type}`} loading="lazy" className="size-full object-cover transition-transform duration-[1400ms] ease-out group-hover:scale-[1.08]" />
+        <Image src={p.image} alt={`${p.name}, ${p.city} — ${p.type}`} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-cover transition-transform duration-[1400ms] ease-out group-hover:scale-[1.08]" />
         <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-ink via-ink/25 to-ink/30" />
         <div className="absolute left-4 top-4 flex flex-wrap gap-1.5">
           <span className="glass rounded-full px-3 py-1 text-[0.68rem] font-medium uppercase tracking-[0.14em] !bg-ink/50">{p.type}</span>
@@ -255,8 +255,7 @@ export function Collection() {
               <AtriumMap properties={filtered} activeId={mapSel} onSelect={setMapSel} className="h-[62vh] min-h-[420px] lg:h-[640px]" />
               {selected && (
                 <div className="glass animate-fade-up absolute inset-x-3 bottom-3 z-10 flex items-center gap-4 rounded-3xl p-3 !bg-ink/85 text-ivory sm:inset-x-auto sm:left-4 sm:bottom-4 sm:w-[24rem]">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={selected.image} alt="" className="size-20 shrink-0 rounded-2xl object-cover" />
+                  <Image src={selected.image} alt="" width={96} height={96} sizes="80px" className="size-20 shrink-0 rounded-2xl object-cover" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-display text-2xl leading-none">{selected.name}</p>
                     <p className="mt-1 truncate text-xs text-ivory/60">
