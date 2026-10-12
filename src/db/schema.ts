@@ -1,0 +1,66 @@
+import {
+  bigint,
+  boolean,
+  doublePrecision,
+  integer,
+  jsonb,
+  pgTable,
+  serial,
+  text,
+  timestamp,
+} from "drizzle-orm/pg-core";
+import type { ModelSpec, PropertyFacts } from "@/lib/types";
+
+export const properties = pgTable("properties", {
+  id: serial("id").primaryKey(),
+  slug: text("slug").notNull().unique(),
+  name: text("name").notNull(),
+  tagline: text("tagline").notNull(),
+  city: text("city").notNull(),
+  region: text("region").notNull(),
+  country: text("country").notNull(),
+  continent: text("continent").notNull(),
+  lat: doublePrecision("lat").notNull(),
+  lng: doublePrecision("lng").notNull(),
+  price: bigint("price", { mode: "number" }).notNull(),
+  type: text("type").notNull(),
+  beds: integer("beds").notNull(),
+  baths: integer("baths").notNull(),
+  sqft: integer("sqft").notNull(),
+  lotAcres: doublePrecision("lot_acres").notNull(),
+  yearBuilt: integer("year_built").notNull(),
+  architect: text("architect").notNull(),
+  image: text("image").notNull(),
+  description: text("description").notNull(),
+  highlights: jsonb("highlights").$type<string[]>().notNull(),
+  amenities: jsonb("amenities").$type<string[]>().notNull(),
+  facts: jsonb("facts").$type<PropertyFacts>().notNull(),
+  model: jsonb("model").$type<ModelSpec>().notNull(),
+  offMarket: boolean("off_market").notNull().default(false),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const enquiries = pgTable("enquiries", {
+  id: serial("id").primaryKey(),
+  propertyId: integer("property_id"),
+  kind: text("kind").notNull().default("viewing"),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone"),
+  preferredDate: text("preferred_date"),
+  message: text("message"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const accessRequests = pgTable("access_requests", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  role: text("role").notNull(),
+  budget: text("budget"),
+  regions: text("regions"),
+  message: text("message"),
+  status: text("status").notNull().default("pending"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});

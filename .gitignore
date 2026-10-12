@@ -1,0 +1,30 @@
+# dependencies
+node_modules/
+
+# next.js
+.next/
+out/
+
+# production
+/build/
+
+# env files (never commit secrets)
+.env
+.env*.local
+.env.development
+.env.production
+
+# vercel
+.vercel/
+
+# drizzle
+drizzle/meta/_journal.json.bak
+
+# misc
+*.log
+npm-debug.log*
+.DS_Store
+*.pem
+
+# typescript
+*.tsbuildinfo
