@@ -4,32 +4,32 @@ import { Pool } from "pg";
 const databaseUrl = process.env.DATABASE_URL;
 
 /**
- * `next build` (e.g. on Vercel) imports route modules to collect metadata,
- * which evaluates this module at BUILD time — before project env vars are
- * guaranteed to exist. The check is therefore strict at RUNTIME but
- * tolerant during the build phase; a missing DATABASE_URL fails the
- * deployed app loudly on first query instead of breaking the build.
+ * This module is imported by the home page and API routes, so it must never
+ * throw at import time (including during `next build`, when env vars may not
+ * exist yet). Without DATABASE_URL the pool points at an unroutable local
+ * address: every query fails fast with a connection error, and callers
+ * already handle that — the landing page falls back to built-in seed data,
+ * enquiry/access-request routes return a friendly 500, and /api/health
+ * reports ok:false. Configure DATABASE_URL to enable persistence.
  */
-const isBuildPhase = process.env.NEXT_PHASE === "phase-production-build";
-
-if (!databaseUrl && !isBuildPhase) {
-  throw new Error("DATABASE_URL is required");
+if (!databaseUrl) {
+  console.warn(
+    "[db] DATABASE_URL is not set — using built-in seed data for the landing page; " +
+      "enquiries, access requests and /api/health are unavailable until it is configured."
+  );
 }
 
 const globalForDb = globalThis as typeof globalThis & {
   __arenaNextJsPostgresqlPool?: Pool;
 };
 
-// During the build phase without DATABASE_URL the pool is a placeholder —
-// route modules are imported but never executed, so no query ever runs.
-export const pool = databaseUrl
-  ? (globalForDb.__arenaNextJsPostgresqlPool ??
-    new Pool({
-      connectionString: databaseUrl,
-    }))
-  : (undefined as unknown as Pool);
+export const pool =
+  globalForDb.__arenaNextJsPostgresqlPool ??
+  new Pool({
+    connectionString: databaseUrl ?? "postgresql://127.0.0.1:1/atrium_unavailable",
+  });
 
-if (databaseUrl && process.env.NODE_ENV !== "production") {
+if (process.env.NODE_ENV !== "production") {
   globalForDb.__arenaNextJsPostgresqlPool = pool;
 }
 

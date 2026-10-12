@@ -82,9 +82,10 @@ npm run dev          # http://localhost:3000
 | `PRIVATE_OFFICE_CODE` | Recommended | Access code for the Private Office. Defaults to a demo value (`ATRIUM-2026`) — set a unique code in production. |
 | `NEXT_PUBLIC_SITE_URL` | Recommended | Public base URL, e.g. `https://atrium.example.com` (used for SEO metadata) |
 
-> The build itself succeeds without these variables (validation is deferred to
-> first request), so CI/Vercel builds never fail on missing secrets — a missing
-> `DATABASE_URL` or `PRIVATE_OFFICE_SECRET` fails loudly at runtime instead.
+> The build never fails on missing variables: without `DATABASE_URL` the landing
+> page renders from built-in seed data (enquiries, access requests and
+> `/api/health` stay unavailable until it is set), and `PRIVATE_OFFICE_SECRET`
+> must be set in production or Private Office sessions are refused.
 
 ## 🗄️ Data model
 
