@@ -99,7 +99,7 @@ npm run dev          # http://localhost:3000
 1. Push this repository to GitHub.
 2. In Vercel: **Add New → Project → Import** the repository (framework: Next.js —
    auto-detected; defaults are correct).
-3. Provision a database (Vercel Postgres / Neon / Supabase) and set the
+3. Provision a database (Neon is wired up in production) and set the
    environment variables from the table above.
 4. Deploy. Every push to the default branch creates a production deployment.
 
